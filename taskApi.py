@@ -4,16 +4,17 @@ This is a simple API for the tasklist project with a few possible actions
 a) Retrieve the list of availables tasks
 b) Create a new task
 c) Retrieve the task identified by the given task id
-d) todo Update an existing task
-e) todo Delete an existing task
+d) Update an existing task
+e) Delete an existing task
 
 structure
 task = {'id':0 , 'description':"foo" , 'urgent':"0/1"}
 
 """
 
-from flask import Flask, jsonify, Response, request
-import json, taskDB
+from flask import Flask, jsonify, request
+
+import taskDB
 
 app = Flask(__name__)
 
@@ -52,43 +53,49 @@ def createTask():
 # c)
 @app.route('/tasks/<id>')
 def searchTask(id):
+	idx = int(id)  # this is the integer value of the id of one task
 	# search for a task
-	task = [task for task in task_list if task['id'] == id]
+	task = [task for task in task_list if task['id'] == idx]
+	print(task, len(task))
 	if len(task) == 1:
-		return jsonify(task)
+		return jsonify(task[0])
 	else:
 		response = jsonify({'message': 'task not found with id: ' + id})
 		response.status_code = 404
 		return response
 
 
-# d)
+# d) we can only update the description for the  moment
 @app.route('/tasks/<id>', methods=["PUT"])
 def updateTask(id):
+	idx = int(id)  # this is the integer value of the id of one task
 	description = request.json
-	task = [task for task in task_list if task['id'] == id]
+	task = [task for task in task_list if task['id'] == idx]
 	if len(task) != 1:
 		response = jsonify({'message': 'task not found with id: ' + id})
 		response.status_code = 404
 		return response
 	else:
-		task['description'] = description
-		taskDB.update_in_db(id, description)
-		return jsonify(task)
+		task[0]['description'] = description
+		# print(task)
+		taskDB.update_in_db(idx, description)
+		return jsonify(task[0])
 
 
 # e)
 @app.route('/tasks/<id>', methods=["DELETE"])
 def deleteTask(id):
-	task = [task for task in task_list if task['id'] == id]
+	idx = int(id)  # this is the integer value of the id of one task
+	task = [task for task in task_list if task['id'] == idx]
+	print(task)
 	if len(task) != 1:
 		response = jsonify({'message': 'task not found with id: ' + id})
 		response.status_code = 404
 		return response
 	else:
-		task_list.remove(task)
-		taskDB.remove_from_db(id)
-		return jsonify(task)
+		task_list.remove(task[0])
+		taskDB.remove_from_db(idx)
+		return jsonify(task[0])
 
 
 if __name__ == '__main__':
